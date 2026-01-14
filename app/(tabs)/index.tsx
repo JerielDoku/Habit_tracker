@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
 import HabitItem from "../../components/HabitItem";
 import ProgressBar from "../../components/ProgressBar";
+import AppHeader from "../../components/Header";
 
 export default function HomeScreen() {
   const [habits, setHabits] = useState([
@@ -16,8 +17,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View>
-        <Text style={styles.title}>Habit Tracker</Text>
-        <Text style={styles.subtitle}>Build daily habits</Text>
+        <AppHeader title="Habit Tracker" subtitle="Build daily habits" />
       </View>
 
     
@@ -53,17 +53,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    color: "#22c55e",
-  },
-  subtitle: {
-    fontSize: 18,
-    color: "#7f7f7f",
-    marginBottom: 16,
-  },
+  
   date: {
     fontSize: 16,
     color: "#7f7f7f",
