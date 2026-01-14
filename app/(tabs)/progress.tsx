@@ -12,10 +12,10 @@ export default function ProgressScreen() {
   ];
 
   const stats = [
-    { label: "Completed Today", value: 2 },
-    { label: "Longest Streak", value: 5 },
-    { label: "Total Habits", value: 6 },
-    { label: "Avg Streak", value: 3 },
+    { label: "Completed Today", value: 2, color: "#22c55e" },
+    { label: "Longest Streak", value: 5, color: "#3b82f6" },
+    { label: "Total Habits", value: 7, color: "#f59e0b" },
+    { label: "Avg Streak", value: 3, color: "#8b5cf6" },
   ];
 
   return (
@@ -23,15 +23,20 @@ export default function ProgressScreen() {
       <AppHeader title="Your Progress" subtitle="Track your habit journey" />
 
     <View style={styles.grid}>
-        {stats.map((stat, index) => (
-          <View key={index} style={styles.card}>
-            <Text style={styles.value}>{stat.value}</Text>
-            <Text style={styles.label}>{stat.label}</Text>
-          </View>
-        ))}
+       {stats.map((stat, index) => (
+      <View key={index} style={[styles.card, { backgroundColor: stat.color + "1a" }]}>
+        <Text style={[styles.value, { color: stat.color }]}>
+          {stat.value}
+        </Text>
+        <Text style={styles.label}>{stat.label}</Text>
+      </View>
+      ))}
     </View>
 
 
+      <View>
+        <Text style={styles.title}>All Habits</Text> 
+      </View>
       <ScrollView>
         {habits.map((habit, index) => (
           <HabitItem key={index} name={habit.name} streak={habit.streak} />
@@ -45,21 +50,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    paddingBottom: 0,
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
     marginBottom: 16,
+    marginTop: 16,
   },
 
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+    marginTop: 16,
   },
   card: {
     width: "48%", 
-    backgroundColor: "#f5f5f5",
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
