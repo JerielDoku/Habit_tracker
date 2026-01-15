@@ -1,10 +1,10 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect } from "react";
-import { initializeDb } from "../../db/database"; // 1. Point 8: Correct path to your DB file
+import { initializeDb } from "../../db/database"; // Correct relative path
 
 export default function TabsLayout() {
-  // 2. Point 3: Initialize the table on app launch to prevent 'prepareAsync' errors
+  // Initialize the database table when the tab layout loads
   useEffect(() => {
     initializeDb()
       .then(() => console.log("✅ Database and Tables Ready"))
@@ -15,9 +15,11 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#22c55e", // green
+        tabBarActiveTintColor: "#22c55e", // Professional Green
+        tabBarInactiveTintColor: "#888",
       }}
     >
+      {/* 1. HOME TAB (index.tsx) */}
       <Tabs.Screen
         name="index"
         options={{
@@ -28,6 +30,7 @@ export default function TabsLayout() {
         }}
       />
 
+      {/* 2. ADD TAB (add.tsx) */}
       <Tabs.Screen
         name="add"
         options={{
@@ -38,6 +41,7 @@ export default function TabsLayout() {
         }}
       />
 
+      {/* 3. PROGRESS TAB (progress.tsx) */}
       <Tabs.Screen
         name="progress"
         options={{

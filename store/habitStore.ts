@@ -5,6 +5,7 @@ interface Habit {
   id: number;
   title: string;
   completed: boolean;
+  streak?: number; // Added optional streak to match your mock data
 }
 
 interface HabitState {
@@ -13,10 +14,14 @@ interface HabitState {
   addHabit: (title: string) => Promise<void>;
   toggleHabit: (id: number, completed: boolean) => Promise<void>;
   deleteHabit: (id: number) => Promise<void>;
+  formatData: (data: any[]) => Habit[]; // Added to interface for internal use
 }
 
 export const useHabitStore = create<HabitState>((set, get) => ({
-  habits: [],
+  // Updated initial state with seed data
+  habits: [
+    { id: 1, title: 'Drink Water', completed: false, streak: 3 } 
+  ],
 
   // Universal Formatter: Handles both SQLite (0/1) and Web (true/false)
   formatData: (data: any[]) => {
@@ -30,7 +35,10 @@ export const useHabitStore = create<HabitState>((set, get) => ({
   fetchHabits: async () => {
     try {
       const data: any[] = await getHabitsFromDb();
-      set({ habits: get().formatData(data) });
+      // Only update if database has items, otherwise keep mock data for the demo
+      if (data && data.length > 0) {
+        set({ habits: get().formatData(data) });
+      }
     } catch (error) {
       console.error("Fetch Habits Error:", error);
     }
@@ -39,7 +47,6 @@ export const useHabitStore = create<HabitState>((set, get) => ({
   addHabit: async (title: string) => {
     try {
       await addHabitToDb(title);
-      // Refresh list from the source of truth (DB or LocalStorage)
       const data: any[] = await getHabitsFromDb();
       set({ habits: get().formatData(data) });
     } catch (error) {
@@ -49,9 +56,7 @@ export const useHabitStore = create<HabitState>((set, get) => ({
 
   toggleHabit: async (id: number, completed: boolean) => {
     try {
-      // Logic for SQLite (converts bool to 1/0)
       await updateHabitInDb(id, completed ? 1 : 0);
-      
       const data: any[] = await getHabitsFromDb();
       set({ habits: get().formatData(data) });
     } catch (error) {
