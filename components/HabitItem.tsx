@@ -1,27 +1,42 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons"; // Added for the trash icon
+import { useHabitStore } from "../store/habitStore";
 
 type HabitItemProps = {
+  id: number;
   name: string;
   streak: number;
+  completed: boolean;
 };
 
-export default function HabitItem({ name, streak }: HabitItemProps) {
-  const [completed, setCompleted] = useState(false);
+export default function HabitItem({ id, name, streak, completed }: HabitItemProps) {
+  // Point 7: Access both toggle and delete actions from the store
+  const toggleHabit = useHabitStore((state) => state.toggleHabit);
+  const deleteHabit = useHabitStore((state) => state.deleteHabit);
 
-  const toggleCompleted = () => {
-    setCompleted(!completed);
+  const handlePress = () => {
+    toggleHabit(id, !completed);
   };
 
   return (
-    <TouchableOpacity style={styles.container} onPress={toggleCompleted}>
+    <TouchableOpacity style={styles.container} onPress={handlePress}>
       <View style={styles.textContainer}>
-        <Text style={styles.name}>{name}</Text>
+        <Text style={[styles.name, completed && styles.completedText]}>{name}</Text>
         <Text style={styles.streak}>🔥 {streak} day streak</Text>
       </View>
 
-      
-      <View style={[styles.checkbox, completed && styles.checkboxFilled]} />
+      <View style={styles.actionContainer}>
+        {/* NEW: Delete Button integration */}
+        <TouchableOpacity 
+          onPress={() => deleteHabit(id)} 
+          style={styles.deleteButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} // Makes it easier to tap
+        >
+          <Ionicons name="trash-outline" size={20} color="#ef4444" />
+        </TouchableOpacity>
+
+        <View style={[styles.checkbox, completed && styles.checkboxFilled]} />
+      </View>
     </TouchableOpacity>
   );
 }
@@ -36,13 +51,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    backgroundColor: "#fff",
   },
   textContainer: {
     flex: 1,
   },
+  actionContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16, // Space between trash can and checkbox
+  },
+  deleteButton: {
+    padding: 4,
+  },
   name: {
     fontSize: 16,
     fontWeight: "500",
+  },
+  completedText: {
+    textDecorationLine: "line-through",
+    color: "#aaa",
   },
   streak: {
     fontSize: 14,
@@ -60,5 +88,5 @@ const styles = StyleSheet.create({
   checkboxFilled: {
     backgroundColor: "#22c55e",
     borderColor: "#22c55e",
-    },
+  },
 });

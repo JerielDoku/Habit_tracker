@@ -1,7 +1,16 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect } from "react";
+import { initializeDb } from "../../db/database"; // 1. Point 8: Correct path to your DB file
 
 export default function TabsLayout() {
+  // 2. Point 3: Initialize the table on app launch to prevent 'prepareAsync' errors
+  useEffect(() => {
+    initializeDb()
+      .then(() => console.log("✅ Database and Tables Ready"))
+      .catch((err) => console.error("❌ Database Init Failed", err));
+  }, []);
+
   return (
     <Tabs
       screenOptions={{
