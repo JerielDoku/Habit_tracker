@@ -2,11 +2,13 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect } from "react";
 import { initializeDb } from "../../db/database"; // Correct relative path
+import { initHistoryTable } from "../../db/history";
 
 export default function TabsLayout() {
   // Initialize the database table when the tab layout loads
   useEffect(() => {
     initializeDb()
+      .then(() => initHistoryTable())
       .then(() => console.log("✅ Database and Tables Ready"))
       .catch((err) => console.error("❌ Database Init Failed", err));
   }, []);

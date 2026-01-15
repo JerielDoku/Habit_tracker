@@ -1,4 +1,4 @@
-import { ScrollView, Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import { ScrollView, Text, View, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useEffect } from "react"; 
@@ -7,11 +7,13 @@ import ProgressBar from "../../components/ProgressBar";
 import AppHeader from "../../components/Header";
 // Point 5: Using Zustand for better performance and state sharing
 import { useHabitStore } from "../../store/habitStore"; 
+import { logHabitHistory } from "../../db/history";
 
 export default function HomeScreen() {
   // Point 7: Selective subscription to habits and fetch function to prevent re-renders
   const habits = useHabitStore((state) => state.habits);
   const fetchHabits = useHabitStore((state) => state.fetchHabits);
+  const toggleHabit = useHabitStore((state) => state.toggleHabit);
 
   // Point 1: Data consistency - SQLite is the single source of truth
   useEffect(() => {
@@ -22,13 +24,35 @@ export default function HomeScreen() {
   const total = habits.length;
   const completed = habits.filter(habit => habit.completed).length;
 
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+
+  const handleReset = async () => {
+    const completedHabits = habits.filter((habit) => habit.completed);
+
+    // 1. Save completed habits to history
+    const todayISO = new Date().toISOString().split('T')[0];
+    const historyPromises = completedHabits.map((habit) => logHabitHistory(habit.id, todayISO));
+    await Promise.all(historyPromises);
+
+    // 2. Reset tasks for the day (Toggle them off)
+    const promises = completedHabits.map((habit) => toggleHabit(habit.id));
+    await Promise.all(promises);
+    
+    await fetchHabits();
+    Alert.alert("Daily Reset", "Tasks for the day have been cleared and saved to history.");
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <AppHeader title="Habit Tracker" subtitle="Build daily habits" />
 
       <View style={styles.dateContainer}>
-        <Text style={styles.date}>Wednesday, January 14</Text>
-        <TouchableOpacity style={styles.resetButton} onPress={() => alert("Habits reset")}>
+        <Text style={styles.date}>{currentDate}</Text>
+        <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
           <Ionicons name="refresh-outline" size={14} color="#22c55e" />
           <Text style={{ color: "#22c55e" }}>Reset Daily</Text>
         </TouchableOpacity>

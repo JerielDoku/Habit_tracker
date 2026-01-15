@@ -1,21 +1,44 @@
-import { View, Text, ScrollView, StyleSheet,} from "react-native";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useState, useCallback, useEffect } from "react";
+import { useFocusEffect } from "expo-router";
 import HabitItem from "../../components/HabitItem";
 import AppHeader from "../../components/Header";
+import { useHabitStore } from "../../store/habitStore";
+import { getHabitStreak } from "../../db/history";
 
 export default function ProgressScreen() {
-  
-  const habits = [
-    { name: "Drink Water", streak: 3 },
-    { name: "Read Book", streak: 5 },
-    { name: "Exercise", streak: 2 },
-  ];
+  const habits = useHabitStore((state) => state.habits);
+  const fetchHabits = useHabitStore((state) => state.fetchHabits);
+  const [habitStreaks, setHabitStreaks] = useState<Record<number, number>>({});
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchHabits();
+    }, [])
+  );
+
+  useEffect(() => {
+    const loadStreaks = async () => {
+      const streaks: Record<number, number> = {};
+      for (const habit of habits) {
+        streaks[habit.id] = await getHabitStreak(habit.id);
+      }
+      setHabitStreaks(streaks);
+    };
+    if (habits.length > 0) loadStreaks();
+  }, [habits]);
+
+  const completedToday = habits.filter((h) => h.completed).length;
+  const streakValues = Object.values(habitStreaks);
+  const longestStreak = streakValues.length ? Math.max(...streakValues) : 0;
+  const avgStreak = streakValues.length ? Math.round(streakValues.reduce((a, b) => a + b, 0) / streakValues.length) : 0;
 
   const stats = [
-    { label: "Completed Today", value: 2, color: "#22c55e" },
-    { label: "Longest Streak", value: 5, color: "#3b82f6" },
-    { label: "Total Habits", value: 7, color: "#f59e0b" },
-    { label: "Avg Streak", value: 3, color: "#8b5cf6" },
+    { label: "Completed Today", value: completedToday, color: "#22c55e" },
+    { label: "Longest Streak", value: longestStreak, color: "#3b82f6" },
+    { label: "Total Habits", value: habits.length, color: "#f59e0b" },
+    { label: "Avg Streak", value: avgStreak, color: "#8b5cf6" },
   ];
 
   return (
@@ -38,8 +61,14 @@ export default function ProgressScreen() {
         <Text style={styles.title}>All Habits</Text> 
       </View>
       <ScrollView>
-        {habits.map((habit, index) => (
-          <HabitItem key={index} name={habit.name} streak={habit.streak} />
+        {habits.map((habit) => (
+          <HabitItem 
+            key={habit.id} 
+            id={habit.id}
+            name={habit.title} 
+            completed={habit.completed}
+            streak={habitStreaks[habit.id] || 0} 
+          />
         ))}
       </ScrollView>
     </SafeAreaView>
