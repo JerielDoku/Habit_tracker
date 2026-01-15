@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-// Point 8: Ensure all database actions are imported correctly
 import { addHabitToDb, getHabitsFromDb, updateHabitInDb, deleteHabitFromDb } from '../db/database'; 
 
 interface Habit {
@@ -13,25 +12,36 @@ interface HabitState {
   fetchHabits: () => Promise<void>;
   addHabit: (title: string) => Promise<void>;
   toggleHabit: (id: number, completed: boolean) => Promise<void>;
-  // Added to the interface for full CRUD support
   deleteHabit: (id: number) => Promise<void>;
 }
 
-export const useHabitStore = create<HabitState>((set) => ({
+export const useHabitStore = create<HabitState>((set, get) => ({
   habits: [],
 
+  // Universal Formatter: Handles both SQLite (0/1) and Web (true/false)
+  formatData: (data: any[]) => {
+    return data.map(h => ({
+      ...h,
+      // If it's 1 or true, it's completed. Otherwise, false.
+      completed: h.completed === 1 || h.completed === true 
+    }));
+  },
+
   fetchHabits: async () => {
-    const data: any[] = await getHabitsFromDb();
-    const formattedHabits = data.map(h => ({ ...h, completed: h.completed === 1 }));
-    set({ habits: formattedHabits });
+    try {
+      const data: any[] = await getHabitsFromDb();
+      set({ habits: get().formatData(data) });
+    } catch (error) {
+      console.error("Fetch Habits Error:", error);
+    }
   },
 
   addHabit: async (title: string) => {
     try {
       await addHabitToDb(title);
+      // Refresh list from the source of truth (DB or LocalStorage)
       const data: any[] = await getHabitsFromDb();
-      const formattedHabits = data.map(h => ({ ...h, completed: h.completed === 1 }));
-      set({ habits: formattedHabits });
+      set({ habits: get().formatData(data) });
     } catch (error) {
       console.error("Store Add Error:", error);
     }
@@ -39,25 +49,21 @@ export const useHabitStore = create<HabitState>((set) => ({
 
   toggleHabit: async (id: number, completed: boolean) => {
     try {
+      // Logic for SQLite (converts bool to 1/0)
       await updateHabitInDb(id, completed ? 1 : 0);
+      
       const data: any[] = await getHabitsFromDb();
-      const formattedHabits = data.map(h => ({ ...h, completed: h.completed === 1 }));
-      set({ habits: formattedHabits });
+      set({ habits: get().formatData(data) });
     } catch (error) {
       console.error("Toggle Error:", error);
     }
   },
 
-  // INTEGRATED DELETE LOGIC
   deleteHabit: async (id: number) => {
     try {
-      // 1. Remove from SQLite
       await deleteHabitFromDb(id);
-      
-      // 2. Refresh the global list to update the Home screen and Progress Bar
       const data: any[] = await getHabitsFromDb();
-      const formattedHabits = data.map(h => ({ ...h, completed: h.completed === 1 }));
-      set({ habits: formattedHabits });
+      set({ habits: get().formatData(data) });
     } catch (error) {
       console.error("Store Delete Error:", error);
     }
